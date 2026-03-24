@@ -33,16 +33,20 @@
     </div>
 
     <script>
+        <script>
         async function generar() {
             const promptInput = document.getElementById('prompt');
             const boton = document.getElementById('btn-accion');
             const prompt = promptInput.value;
+            
             if(!prompt) return alert("Escribe una descripción, George.");
 
             boton.innerText = "PROCESANDO SINAPSIS...";
             boton.disabled = true;
 
             try {
+                console.log("Iniciando petición para:", prompt); // Verificación en consola
+                
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -50,17 +54,17 @@
                 });
 
                 const data = await response.json();
+                console.log("Respuesta recibida:", data);
 
                 if (data.success) {
                     const seed = Math.floor(Math.random() * 99999);
+                    // Usamos HTTPS seguro para Pollinations
                     const urlFinal = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
                     
                     const imgElement = document.getElementById('foto-ia');
                     const contenedor = document.getElementById('contenedor-resultado');
-                    const descarga = document.getElementById('link-descarga');
 
                     imgElement.src = urlFinal;
-                    descarga.href = urlFinal;
                     
                     imgElement.onload = () => {
                         contenedor.style.display = "block";
@@ -68,13 +72,26 @@
                         boton.disabled = false;
                         contenedor.scrollIntoView({ behavior: 'smooth' });
                     };
+                    
+                    // Si la imagen tarda mucho en cargar, liberamos el botón tras 5 segundos
+                    imgElement.onerror = () => {
+                        alert("La IA generó la imagen pero hay un problema al mostrarla.");
+                        boton.disabled = false;
+                        boton.innerText = "GENERAR IMAGEN";
+                    };
+
+                } else {
+                    throw new Error("La API respondió pero success es false");
                 }
+
             } catch (error) {
-                alert("Error en la conexión.");
+                console.error("ERROR DETECTADO:", error);
+                alert("Error de conexión: " + error.message);
                 boton.innerText = "GENERAR IMAGEN";
                 boton.disabled = false;
             }
         }
+    </script>
     </script>
 </body>
 </html>
