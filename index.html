@@ -1,4 +1,90 @@
-<script>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinapsis Lab | Legendary IMG</title>
+    <style>
+        body { 
+            background: #000; 
+            color: #00f2ff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            margin: 0;
+            padding: 20px;
+        }
+        .card {
+            background: rgba(10, 10, 10, 0.9);
+            padding: 2.5rem;
+            border-radius: 20px;
+            border: 1px solid #00f2ff;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+        }
+        h1 { font-size: 2rem; letter-spacing: 4px; margin-bottom: 0.5rem; text-shadow: 0 0 15px #00f2ff; }
+        p { color: #888; margin-bottom: 2rem; font-size: 0.9rem; }
+        input { 
+            background: #111; 
+            border: 1px solid #333; 
+            color: #fff; 
+            padding: 15px; 
+            width: 100%; 
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+        input:focus { border-color: #00f2ff; box-shadow: 0 0 10px rgba(0, 242, 255, 0.5); }
+        button { 
+            background: #00f2ff; 
+            color: #000; 
+            border: none; 
+            padding: 15px 30px; 
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        button:hover { background: #fff; box-shadow: 0 0 20px #fff; transform: translateY(-2px); }
+        button:disabled { background: #444; color: #888; cursor: not-allowed; }
+        
+        #contenedor-resultado { margin-top: 25px; display: none; }
+        #foto-ia { width: 100%; border-radius: 10px; border: 1px solid #00f2ff; box-shadow: 0 0 15px #00f2ff; }
+        .btn-descarga { 
+            color: #fff; 
+            text-decoration: none; 
+            font-size: 0.8rem; 
+            margin-top: 15px; 
+            display: inline-block; 
+            padding: 8px 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>SINAPSIS LAB</h1>
+        <p>Copywriting 5.0 • Visual Intelligence</p>
+        <input type="text" id="prompt" placeholder="¿Qué quieres crear hoy?">
+        <button id="btn-accion" onclick="generar()">Generar Imagen</button>
+        
+        <div id="contenedor-resultado">
+            <img id="foto-ia" src="" alt="Arte generado">
+            <br>
+            <a id="link-descarga" class="btn-descarga" href="#" target="_blank">⬇ Ver en tamaño completo</a>
+        </div>
+    </div>
+
+    <script>
         async function generar() {
             const promptInput = document.getElementById('prompt');
             const boton = document.getElementById('btn-accion');
@@ -6,12 +92,11 @@
             
             if(!prompt) return alert("Escribe una descripción, George.");
 
-            // Estado de carga visual
             boton.innerText = "PROCESANDO SINAPSIS...";
             boton.disabled = true;
 
             try {
-                // 1. Llamada a tu API en Vercel
+                // Conexión con tu API de Vercel (la que ya sale en verde con 200 OK)
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -21,7 +106,6 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // 2. Si la API da luz verde, activamos el motor visual
                     const seed = Math.floor(Math.random() * 99999);
                     const urlFinal = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
                     
@@ -32,7 +116,6 @@
                     imgElement.src = urlFinal;
                     descarga.href = urlFinal;
                     
-                    // Solo mostramos el resultado cuando la imagen esté realmente cargada
                     imgElement.onload = () => {
                         contenedor.style.display = "block";
                         boton.innerText = "GENERAR IMAGEN";
@@ -44,10 +127,12 @@
                 }
 
             } catch (error) {
-                console.error("Error en el flujo:", error);
+                console.error(error);
                 alert("Hubo un error en la conexión creativa.");
                 boton.innerText = "GENERAR IMAGEN";
                 boton.disabled = false;
             }
         }
     </script>
+</body>
+</html>
