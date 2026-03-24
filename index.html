@@ -9,23 +9,24 @@
         .card { background: rgba(10, 10, 10, 0.9); padding: 2.5rem; border-radius: 20px; border: 1px solid #00f2ff; box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); text-align: center; max-width: 450px; width: 100%; }
         h1 { font-size: 2rem; letter-spacing: 4px; margin-bottom: 0.5rem; text-shadow: 0 0 15px #00f2ff; }
         p { color: #888; margin-bottom: 2rem; font-size: 0.9rem; }
-        input { background: #111; border: 1px solid #333; color: #fff; padding: 15px; width: 100%; border-radius: 8px; margin-bottom: 1rem; box-sizing: border-box; outline: none; }
-        button { background: #00f2ff; color: #000; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; text-transform: uppercase; }
+        input { background: #111; border: 1px solid #333; color: #fff; padding: 15px; width: 100%; border-radius: 8px; margin-bottom: 1rem; box-sizing: border-box; outline: none; border: 1px solid #00f2ff; }
+        button { background: #00f2ff; color: #000; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; }
+        button:hover { background: #fff; box-shadow: 0 0 20px #fff; }
         button:disabled { background: #444; color: #888; cursor: not-allowed; }
         #contenedor-resultado { margin-top: 25px; display: none; }
-        #foto-ia { width: 100%; border-radius: 10px; border: 1px solid #00f2ff; background: #111; }
-        .status { color: #00f2ff; margin-top: 10px; font-size: 0.8rem; }
+        #foto-ia { width: 100%; border-radius: 10px; border: 1px solid #00f2ff; background: #050505; min-height: 300px; }
+        .status-msg { color: #00f2ff; font-size: 0.8rem; margin-top: 10px; font-style: italic; }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>SINAPSIS LAB</h1>
         <p>Copywriting 5.0 • Visual Intelligence</p>
-        <input type="text" id="prompt" placeholder="¿Qué quieres crear hoy?">
+        <input type="text" id="prompt" placeholder="¿Qué quieres crear hoy, George?">
         <button id="btn-accion" onclick="generar()">Generar Imagen</button>
         <div id="contenedor-resultado">
-            <div id="status-text" class="status">Conectando con la red neuronal...</div>
-            <img id="foto-ia" src="" alt="Arte de Sinapsis Lab">
+            <div id="status-text" class="status-msg">Iniciando sinapsis visual...</div>
+            <img id="foto-ia" src="" alt="Resultado Sinapsis Lab">
         </div>
     </div>
 
@@ -37,14 +38,15 @@
             const contenedor = document.getElementById('contenedor-resultado');
             const status = document.getElementById('status-text');
 
-            if(!prompt) return alert("Escribe tu idea, George.");
+            if(!prompt) return alert("Escribe una idea primero.");
 
             boton.innerText = "PROCESANDO SINAPSIS...";
             boton.disabled = true;
             contenedor.style.display = "block";
-            status.innerText = "Generando visión...";
+            status.innerText = "Conectando con la red neuronal...";
 
             try {
+                // Confirmamos que tu API responde 200 OK como en tus logs
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -55,30 +57,28 @@
 
                 if (data.success) {
                     const seed = Math.floor(Math.random() * 999999);
-                    // Nueva URL mejorada
-                    const urlFinal = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
+                    // URL simplificada y directa para evitar el error 404
+                    const urlFinal = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true&model=flux`;
                     
-                    // Truco: precargar la imagen antes de mostrarla
-                    const tempImg = new Image();
-                    tempImg.src = urlFinal;
+                    status.innerText = "Renderizando imagen (esto puede tardar 10s)...";
                     
-                    tempImg.onload = () => {
-                        img.src = urlFinal;
-                        status.innerText = "¡Sinapsis completada!";
+                    // Forzamos la carga
+                    img.src = urlFinal;
+                    
+                    img.onload = () => {
+                        status.innerText = "¡Imagen generada con éxito!";
                         boton.innerText = "GENERAR IMAGEN";
                         boton.disabled = false;
+                        img.scrollIntoView({ behavior: 'smooth' });
                     };
 
-                    tempImg.onerror = () => {
-                        // Si falla, intentamos una ruta alternativa
+                    img.onerror = () => {
+                        status.innerText = "Reintentando por ruta alterna...";
                         img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?seed=${seed}`;
-                        status.innerText = "Usando ruta de emergencia...";
-                        boton.disabled = false;
-                        boton.innerText = "GENERAR IMAGEN";
                     };
                 }
             } catch (error) {
-                status.innerText = "Error en la conexión.";
+                status.innerText = "Error de conexión en Sinapsis Lab.";
                 boton.disabled = false;
                 boton.innerText = "GENERAR IMAGEN";
             }
