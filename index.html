@@ -69,33 +69,35 @@
     </div>
 
     <script>
-       async function generar() {
-    const promptInput = document.getElementById('prompt');
-    const boton = document.querySelector('button');
-    const prompt = promptInput.value;
-
-    if(!prompt) return alert("Escribe una descripción, George.");
-
-    boton.innerText = "GENERANDO...";
-    boton.disabled = true;
-
     try {
-        const response = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: prompt })
-        });
+    const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: prompt })
+    });
 
-        const data = await response.json();
-        console.log("Respuesta de la IA:", data);
-        alert("¡Conexión completada! Revisa la consola (F12) para ver la respuesta de la IA.");
-        
-    } catch (error) {
-        alert("Hubo un error en la conexión.");
-    } finally {
+    const data = await response.json();
+    
+    // Usamos un generador de imagen basado en tu prompt
+    const urlImagen = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000)}&nologo=true`;
+    
+    const foto = document.getElementById('foto-ia');
+    const contenedor = document.getElementById('contenedor-imagen');
+    const descarga = document.getElementById('link-descarga');
+
+    foto.src = urlImagen;
+    descarga.href = urlImagen;
+    
+    foto.onload = () => {
+        contenedor.style.display = "block";
         boton.innerText = "GENERAR IMAGEN";
         boton.disabled = false;
-    }
+    };
+
+} catch (error) {
+    alert("Error al conectar con la IA");
+    boton.innerText = "GENERAR IMAGEN";
+    boton.disabled = false;
 }
     </script>
 </body>
