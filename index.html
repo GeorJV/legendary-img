@@ -13,21 +13,22 @@
             flex-direction: column; 
             align-items: center; 
             justify-content: center; 
-            height: 100vh; 
+            min-height: 100vh; 
             margin: 0;
-            overflow: hidden;
+            padding: 20px;
         }
         .card {
             background: rgba(10, 10, 10, 0.9);
-            padding: 3rem;
+            padding: 2rem;
             border-radius: 20px;
             border: 1px solid #00f2ff;
             box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
             text-align: center;
             max-width: 450px;
+            width: 100%;
         }
-        h1 { font-size: 2.5rem; letter-spacing: 4px; margin-bottom: 0.5rem; text-shadow: 0 0 15px #00f2ff; }
-        p { color: #888; margin-bottom: 2rem; }
+        h1 { font-size: 2rem; letter-spacing: 4px; margin-bottom: 0.5rem; text-shadow: 0 0 15px #00f2ff; }
+        p { color: #888; margin-bottom: 2rem; font-size: 0.9rem; }
         input { 
             background: #111; 
             border: 1px solid #333; 
@@ -53,6 +54,12 @@
             text-transform: uppercase;
         }
         button:hover { background: #fff; box-shadow: 0 0 20px #fff; transform: translateY(-2px); }
+        button:disabled { background: #444; color: #888; cursor: not-allowed; }
+        
+        #contenedor-imagen { margin-top: 25px; display: none; }
+        #foto-ia { width: 100%; border-radius: 10px; border: 1px solid #00f2ff; box-shadow: 0 0 15px #00f2ff; }
+        #link-descarga { color: #fff; text-decoration: none; font-size: 0.8rem; margin-top: 15px; display: inline-block; opacity: 0.7; }
+        #link-descarga:hover { opacity: 1; text-shadow: 0 0 5px #fff; }
     </style>
 </head>
 <body>
@@ -60,45 +67,64 @@
         <h1>SINAPSIS LAB</h1>
         <p>Copywriting 5.0 • Visual Intelligence</p>
         <input type="text" id="prompt" placeholder="¿Qué quieres crear hoy?">
-        <button onclick="generar()">Generar Imagen</button>
-        <div id="contenedor-imagen" style="margin-top: 20px; display: none;">
-    <img id="foto-ia" src="" style="width: 100%; border-radius: 10px; border: 1px solid #00f2ff; box-shadow: 0 0 15px #00f2ff;">
-    <br>
-    <a id="link-descarga" href="#" download="sinapsis-lab-arte.png" style="color: #fff; text-decoration: none; font-size: 0.8rem; margin-top: 10px; display: inline-block;">⬇ Descargar Imagen</a>
-</div>
+        <button id="btn-generar" onclick="generar()">Generar Imagen</button>
+        
+        <div id="contenedor-imagen">
+            <img id="foto-ia" src="" alt="Arte generado por IA">
+            <br>
+            <a id="link-descarga" href="#" target="_blank">⬇ Ver / Descargar Imagen</a>
+        </div>
     </div>
 
     <script>
-    try {
-    const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: prompt })
-    });
+        async function generar() {
+            const promptInput = document.getElementById('prompt');
+            const boton = document.getElementById('btn-generar');
+            const prompt = promptInput.value;
+            
+            if(!prompt) {
+                alert("Escribe una descripción primero, George.");
+                return;
+            }
 
-    const data = await response.json();
-    
-    // Usamos un generador de imagen basado en tu prompt
-    const urlImagen = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000)}&nologo=true`;
-    
-    const foto = document.getElementById('foto-ia');
-    const contenedor = document.getElementById('contenedor-imagen');
-    const descarga = document.getElementById('link-descarga');
+            // UI de carga
+            boton.innerText = "CONECTANDO SINAPSIS...";
+            boton.disabled = true;
 
-    foto.src = urlImagen;
-    descarga.href = urlImagen;
-    
-    foto.onload = () => {
-        contenedor.style.display = "block";
-        boton.innerText = "GENERAR IMAGEN";
-        boton.disabled = false;
-    };
+            try {
+                // Llamada a tu API secreta en Vercel
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
 
-} catch (error) {
-    alert("Error al conectar con la IA");
-    boton.innerText = "GENERAR IMAGEN";
-    boton.disabled = false;
-}
+                // Generamos la URL de la imagen
+                const urlImagen = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${Math.floor(Math.random() * 10000)}&nologo=true`;
+                
+                const foto = document.getElementById('foto-ia');
+                const contenedor = document.getElementById('contenedor-imagen');
+                const descarga = document.getElementById('link-descarga');
+
+                // Precargar la imagen antes de mostrarla
+                foto.src = urlImagen;
+                descarga.href = urlImagen;
+                
+                foto.onload = () => {
+                    contenedor.style.display = "block";
+                    boton.innerText = "GENERAR IMAGEN";
+                    boton.disabled = false;
+                    // Scroll suave hacia la imagen
+                    contenedor.scrollIntoView({ behavior: 'smooth' });
+                };
+
+            } catch (error) {
+                console.error(error);
+                alert("Error al conectar con la IA de Sinapsis Lab");
+                boton.innerText = "GENERAR IMAGEN";
+                boton.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>
