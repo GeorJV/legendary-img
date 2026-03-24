@@ -13,8 +13,8 @@
         button { background: #00f2ff; color: #000; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; text-transform: uppercase; }
         button:disabled { background: #444; color: #888; cursor: not-allowed; }
         #contenedor-resultado { margin-top: 25px; display: none; }
-        #foto-ia { width: 100%; border-radius: 10px; border: 1px solid #00f2ff; min-height: 200px; background: #111; }
-        .texto-guia { color: #00f2ff; margin-bottom: 10px; font-weight: bold; }
+        #foto-ia { width: 100%; border-radius: 10px; border: 1px solid #00f2ff; background: #111; }
+        .status { color: #00f2ff; margin-top: 10px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -24,24 +24,27 @@
         <input type="text" id="prompt" placeholder="¿Qué quieres crear hoy?">
         <button id="btn-accion" onclick="generar()">Generar Imagen</button>
         <div id="contenedor-resultado">
-            <p class="texto-guia">Procesando visualización...</p>
-            <img id="foto-ia" src="" alt="Tu creación de Sinapsis Lab">
+            <div id="status-text" class="status">Conectando con la red neuronal...</div>
+            <img id="foto-ia" src="" alt="Arte de Sinapsis Lab">
         </div>
     </div>
 
     <script>
         async function generar() {
-            const promptInput = document.getElementById('prompt');
+            const prompt = document.getElementById('prompt').value;
             const boton = document.getElementById('btn-accion');
-            const prompt = promptInput.value;
-            
-            if(!prompt) return alert("Por favor, ingresa un prompt.");
+            const img = document.getElementById('foto-ia');
+            const contenedor = document.getElementById('contenedor-resultado');
+            const status = document.getElementById('status-text');
+
+            if(!prompt) return alert("Escribe tu idea, George.");
 
             boton.innerText = "PROCESANDO SINAPSIS...";
             boton.disabled = true;
+            contenedor.style.display = "block";
+            status.innerText = "Generando visión...";
 
             try {
-                // Llamada a tu API exitosa (Status 200 en logs)
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -51,34 +54,33 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    const seed = Math.floor(Math.random() * 1000000);
-                    // URL optimizada para evitar bloqueos
-                    const urlFinal = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
+                    const seed = Math.floor(Math.random() * 999999);
+                    // Nueva URL mejorada
+                    const urlFinal = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
                     
-                    const imgElement = document.getElementById('foto-ia');
-                    const contenedor = document.getElementById('contenedor-resultado');
-                    const guia = document.querySelector('.texto-guia');
-
-                    imgElement.src = urlFinal;
-                    contenedor.style.display = "block";
+                    // Truco: precargar la imagen antes de mostrarla
+                    const tempImg = new Image();
+                    tempImg.src = urlFinal;
                     
-                    imgElement.onload = () => {
-                        guia.innerText = "¡Imagen Lista!";
+                    tempImg.onload = () => {
+                        img.src = urlFinal;
+                        status.innerText = "¡Sinapsis completada!";
                         boton.innerText = "GENERAR IMAGEN";
                         boton.disabled = false;
-                        imgElement.scrollIntoView({ behavior: 'smooth' });
                     };
 
-                    imgElement.onerror = () => {
-                        guia.innerText = "Reintentando conexión visual...";
-                        // Pequeño retraso para reintentar si la red está saturada
-                        setTimeout(() => { imgElement.src = urlFinal + "&retry=1"; }, 2000);
+                    tempImg.onerror = () => {
+                        // Si falla, intentamos una ruta alternativa
+                        img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?seed=${seed}`;
+                        status.innerText = "Usando ruta de emergencia...";
+                        boton.disabled = false;
+                        boton.innerText = "GENERAR IMAGEN";
                     };
                 }
             } catch (error) {
-                alert("Error de conexión con Sinapsis Lab.");
-                boton.innerText = "GENERAR IMAGEN";
+                status.innerText = "Error en la conexión.";
                 boton.disabled = false;
+                boton.innerText = "GENERAR IMAGEN";
             }
         }
     </script>
