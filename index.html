@@ -13,7 +13,8 @@
         button { background: #00f2ff; color: #000; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; text-transform: uppercase; }
         button:disabled { background: #444; color: #888; cursor: not-allowed; }
         #contenedor-resultado { margin-top: 25px; display: none; }
-        #foto-ia { width: 100%; border-radius: 10px; border: 1px solid #00f2ff; }
+        #foto-ia { width: 100%; border-radius: 10px; border: 1px solid #00f2ff; min-height: 200px; background: #111; }
+        .texto-guia { color: #00f2ff; margin-bottom: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -23,8 +24,8 @@
         <input type="text" id="prompt" placeholder="¿Qué quieres crear hoy?">
         <button id="btn-accion" onclick="generar()">Generar Imagen</button>
         <div id="contenedor-resultado">
-            <p style="color:#00f2ff">Imagen Generada:</p>
-            <img id="foto-ia" src="" alt="Arte generado">
+            <p class="texto-guia">Procesando visualización...</p>
+            <img id="foto-ia" src="" alt="Tu creación de Sinapsis Lab">
         </div>
     </div>
 
@@ -34,13 +35,13 @@
             const boton = document.getElementById('btn-accion');
             const prompt = promptInput.value;
             
-            if(!prompt) return alert("Escribe una descripción, George.");
+            if(!prompt) return alert("Por favor, ingresa un prompt.");
 
             boton.innerText = "PROCESANDO SINAPSIS...";
             boton.disabled = true;
 
             try {
-                // Verificamos conexión con tu API que ya funciona
+                // Llamada a tu API exitosa (Status 200 en logs)
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -50,25 +51,32 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    const seed = Math.floor(Math.random() * 99999);
-                    const urlFinal = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
+                    const seed = Math.floor(Math.random() * 1000000);
+                    // URL optimizada para evitar bloqueos
+                    const urlFinal = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
                     
                     const imgElement = document.getElementById('foto-ia');
                     const contenedor = document.getElementById('contenedor-resultado');
+                    const guia = document.querySelector('.texto-guia');
 
-                    // Forzamos la visualización inmediata
                     imgElement.src = urlFinal;
                     contenedor.style.display = "block";
                     
-                    // Restauramos el botón después de enviar la orden de carga
-                    setTimeout(() => {
+                    imgElement.onload = () => {
+                        guia.innerText = "¡Imagen Lista!";
                         boton.innerText = "GENERAR IMAGEN";
                         boton.disabled = false;
                         imgElement.scrollIntoView({ behavior: 'smooth' });
-                    }, 2000);
+                    };
+
+                    imgElement.onerror = () => {
+                        guia.innerText = "Reintentando conexión visual...";
+                        // Pequeño retraso para reintentar si la red está saturada
+                        setTimeout(() => { imgElement.src = urlFinal + "&retry=1"; }, 2000);
+                    };
                 }
             } catch (error) {
-                alert("Error de red: " + error.message);
+                alert("Error de conexión con Sinapsis Lab.");
                 boton.innerText = "GENERAR IMAGEN";
                 boton.disabled = false;
             }
