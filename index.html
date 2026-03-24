@@ -19,7 +19,7 @@
         }
         .card {
             background: rgba(10, 10, 10, 0.9);
-            padding: 2rem;
+            padding: 2.5rem;
             border-radius: 20px;
             border: 1px solid #00f2ff;
             box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
@@ -56,10 +56,18 @@
         button:hover { background: #fff; box-shadow: 0 0 20px #fff; transform: translateY(-2px); }
         button:disabled { background: #444; color: #888; cursor: not-allowed; }
         
-        #contenedor-imagen { margin-top: 25px; display: none; }
+        #contenedor-resultado { margin-top: 25px; display: none; }
         #foto-ia { width: 100%; border-radius: 10px; border: 1px solid #00f2ff; box-shadow: 0 0 15px #00f2ff; }
-        #link-descarga { color: #fff; text-decoration: none; font-size: 0.8rem; margin-top: 15px; display: inline-block; opacity: 0.7; }
-        #link-descarga:hover { opacity: 1; text-shadow: 0 0 5px #fff; }
+        .btn-descarga { 
+            color: #fff; 
+            text-decoration: none; 
+            font-size: 0.8rem; 
+            margin-top: 15px; 
+            display: inline-block; 
+            padding: 8px 15px;
+            border: 1px border-color: #333;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -67,60 +75,49 @@
         <h1>SINAPSIS LAB</h1>
         <p>Copywriting 5.0 • Visual Intelligence</p>
         <input type="text" id="prompt" placeholder="¿Qué quieres crear hoy?">
-        <button id="btn-generar" onclick="generar()">Generar Imagen</button>
+        <button id="btn-accion" onclick="generar()">Generar Imagen</button>
         
-        <div id="contenedor-imagen">
-            <img id="foto-ia" src="" alt="Arte generado por IA">
+        <div id="contenedor-resultado">
+            <img id="foto-ia" src="" alt="Arte generado">
             <br>
-            <a id="link-descarga" href="#" target="_blank">⬇ Ver / Descargar Imagen</a>
+            <a id="link-descarga" class="btn-descarga" href="#" target="_blank">⬇ Ver en tamaño completo</a>
         </div>
     </div>
 
     <script>
         async function generar() {
             const promptInput = document.getElementById('prompt');
-            const boton = document.getElementById('btn-generar');
+            const boton = document.getElementById('btn-accion');
             const prompt = promptInput.value;
             
-            if(!prompt) {
-                alert("Escribe una descripción primero, George.");
-                return;
-            }
+            if(!prompt) return alert("Escribe una descripción, George.");
 
-            // UI de carga
-            boton.innerText = "CONECTANDO SINAPSIS...";
+            // Estado de carga
+            boton.innerText = "PROCESANDO SINAPSIS...";
             boton.disabled = true;
 
             try {
-                // Llamada a tu API secreta en Vercel
-                const response = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt })
-                });
-
-                // Generamos la URL de la imagen
-                const urlImagen = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${Math.floor(Math.random() * 10000)}&nologo=true`;
+                // Generamos la URL mágica (usando Pollinations como motor visual)
+                const seed = Math.floor(Math.random() * 99999);
+                const urlFinal = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
                 
-                const foto = document.getElementById('foto-ia');
-                const contenedor = document.getElementById('contenedor-imagen');
+                const imgElement = document.getElementById('foto-ia');
+                const contenedor = document.getElementById('contenedor-resultado');
                 const descarga = document.getElementById('link-descarga');
 
-                // Precargar la imagen antes de mostrarla
-                foto.src = urlImagen;
-                descarga.href = urlImagen;
+                // Precarga de la imagen
+                imgElement.src = urlFinal;
+                descarga.href = urlFinal;
                 
-                foto.onload = () => {
+                imgElement.onload = () => {
                     contenedor.style.display = "block";
                     boton.innerText = "GENERAR IMAGEN";
                     boton.disabled = false;
-                    // Scroll suave hacia la imagen
                     contenedor.scrollIntoView({ behavior: 'smooth' });
                 };
 
             } catch (error) {
-                console.error(error);
-                alert("Error al conectar con la IA de Sinapsis Lab");
+                alert("Hubo un error en la conexión creativa.");
                 boton.innerText = "GENERAR IMAGEN";
                 boton.disabled = false;
             }
