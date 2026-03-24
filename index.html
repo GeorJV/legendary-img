@@ -65,7 +65,7 @@
             margin-top: 15px; 
             display: inline-block; 
             padding: 8px 15px;
-            border: 1px border-color: #333;
+            border: 1px solid #333;
             border-radius: 5px;
         }
     </style>
@@ -92,36 +92,48 @@
             
             if(!prompt) return alert("Escribe una descripción, George.");
 
-            // Estado de carga
             boton.innerText = "PROCESANDO SINAPSIS...";
             boton.disabled = true;
 
             try {
-                // Generamos la URL mágica (usando Pollinations como motor visual)
-                const seed = Math.floor(Math.random() * 99999);
-                const urlFinal = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
-                
-                const imgElement = document.getElementById('foto-ia');
-                const contenedor = document.getElementById('contenedor-resultado');
-                const descarga = document.getElementById('link-descarga');
+                // 1. Llamamos a tu API de Vercel para validar la conexión
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
 
-                // Precarga de la imagen
-                imgElement.src = urlFinal;
-                descarga.href = urlFinal;
-                
-                imgElement.onload = () => {
-                    contenedor.style.display = "block";
-                    boton.innerText = "GENERAR IMAGEN";
-                    boton.disabled = false;
-                    contenedor.scrollIntoView({ behavior: 'smooth' });
-                };
+                const data = await response.json();
+
+                if (data.success) {
+                    // 2. Si la API responde bien, generamos la imagen
+                    const seed = Math.floor(Math.random() * 99999);
+                    const urlFinal = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
+                    
+                    const imgElement = document.getElementById('foto-ia');
+                    const contenedor = document.getElementById('contenedor-resultado');
+                    const descarga = document.getElementById('link-descarga');
+
+                    imgElement.src = urlFinal;
+                    descarga.href = urlFinal;
+                    
+                    imgElement.onload = () => {
+                        contenedor.style.display = "block";
+                        boton.innerText = "GENERAR IMAGEN";
+                        boton.disabled = false;
+                        contenedor.scrollIntoView({ behavior: 'smooth' });
+                    };
+                } else {
+                    throw new Error("Respuesta de API no exitosa");
+                }
 
             } catch (error) {
+                console.error(error);
                 alert("Hubo un error en la conexión creativa.");
                 boton.innerText = "GENERAR IMAGEN";
                 boton.disabled = false;
             }
-        }
+        } // <-- Aquí estaba el error, faltaba cerrar la función
     </script>
 </body>
 </html>
