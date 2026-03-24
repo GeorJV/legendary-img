@@ -64,11 +64,34 @@
     </div>
 
     <script>
-        function generar() {
-            const prompt = document.getElementById('prompt').value;
-            if(!prompt) return alert("Escribe algo primero, George");
-            alert("¡Conexión exitosa! Pronto vincularemos a Gemini para crear: " + prompt);
-        }
+       async function generar() {
+    const promptInput = document.getElementById('prompt');
+    const boton = document.querySelector('button');
+    const prompt = promptInput.value;
+
+    if(!prompt) return alert("Escribe una descripción, George.");
+
+    boton.innerText = "GENERANDO...";
+    boton.disabled = true;
+
+    try {
+        const response = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: prompt })
+        });
+
+        const data = await response.json();
+        console.log("Respuesta de la IA:", data);
+        alert("¡Conexión completada! Revisa la consola (F12) para ver la respuesta de la IA.");
+        
+    } catch (error) {
+        alert("Hubo un error en la conexión.");
+    } finally {
+        boton.innerText = "GENERAR IMAGEN";
+        boton.disabled = false;
+    }
+}
     </script>
 </body>
 </html>
